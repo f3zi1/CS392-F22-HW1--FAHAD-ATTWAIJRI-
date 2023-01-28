@@ -1,0 +1,252 @@
+import java.awt.*;
+import javax.swing.ButtonGroup;
+import java.awt.event.*;
+import javax.swing.*;
+import javax.swing.event.*;
+import javax.swing.table.AbstractTableModel;
+import javax.swing.table.TableColumnModel;
+import java.util.ArrayList;
+import javax.swing.table.TableRowSorter;
+
+
+public class DaycareView extends JFrame {
+
+
+	private JPanel filterPanel; // filter panel
+	private JTable table;
+	private TableModel tableModel;
+	private DaycareList myList;
+	private JTextField filterText = new JTextField("Enter a search item.............");
+	private JLabel filterLabel = new JLabel("Search Daycare Table"); 
+	private TableRowSorter<TableModel> sorter;
+
+	//private ButtonGroup group;
+	private JRadioButton nameButton;
+	private JRadioButton cityButton;
+	private JRadioButton zipCodeButton; 
+	private JRadioButton statusButton;
+
+	/**
+	 * Purpose: A DaycareView constructor
+	 * @param 
+	 */
+	public DaycareView() {
+		super("Daycare Portal");
+		System.out.println("starting daycareview");
+
+		myList = new DaycareList();
+		myList.readFile("sandiegoDaycares.csv");
+
+		//build JTable
+		tableModel = new TableModel(myList);
+		sorter = new TableRowSorter<TableModel>(tableModel);
+		table = new JTable(tableModel);
+		table.setRowSorter(sorter);
+		table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+
+		TableColumnModel columnModel = table.getColumnModel();
+		columnModel.getColumn(0).setPreferredWidth(100);
+		columnModel.getColumn(1).setPreferredWidth(100);
+		columnModel.getColumn(2).setPreferredWidth(100);
+		columnModel.getColumn(3).setPreferredWidth(100);
+		columnModel.getColumn(4).setPreferredWidth(100);
+
+		//calls buildPanel() method  
+		buildPanel();
+	} // end constructor
+
+	/**
+	 * Purpose: builds the main panel and its components (radiobutton, JLable, and JTextfield).
+	 * @param 
+	 */
+	public void buildPanel()
+	{
+		JScrollPane scrollPane = new JScrollPane (table);
+		scrollPane.setPreferredSize(new Dimension (800, 150));
+		add(scrollPane, BorderLayout.CENTER);
+		System.out.println("Added scrollpane");
+
+		filterPanel = new JPanel(); // create filter panel (the main panel)
+		filterPanel.setLayout(new FlowLayout());
+		filterPanel.add(filterLabel);
+		filterPanel.add(filterText);
+		add(filterPanel, BorderLayout.SOUTH);
+
+		//create RadioButtons
+		nameButton =  new JRadioButton("name", true);
+		cityButton = new JRadioButton("city");
+		zipCodeButton = new JRadioButton("zipcode"); 
+		statusButton = new JRadioButton("status");
+
+		ButtonGroup group = new ButtonGroup();        
+		group.add(nameButton);
+		group.add(cityButton);
+		group.add(zipCodeButton);
+		group.add(statusButton);
+
+		//add Buttons to group
+		filterPanel.add(nameButton);
+		filterPanel.add(cityButton);
+		filterPanel.add(zipCodeButton);
+		filterPanel.add(statusButton); 
+	}
+
+
+	/**
+	 * Purpose: An inner class  that builds the Table data
+	 * extends AbstractTableModel
+	 */
+	class TableModel extends AbstractTableModel 
+	{ 
+		private String[]header = 
+			{"Type", "Name", "Status", "Type A", "Type B", "Address", "City", "Zipcode"}; 
+		private ArrayList<Daycares> myList;
+
+		/**
+		 * Purpose: A TableModel constructor
+		 * @param the DaycareList arraylist
+		 */
+		public TableModel(DaycareList dList) 
+		{
+			myList = dList.getDaycares();
+		}
+
+		/**
+		 * Purpose: Gets the column count of the table.
+		 * @return returns the number of columns.
+		 */
+		public int getColumnCount() {
+			return header.length;
+		}
+
+		/**
+		 * Purpose: Gets the row count of the table
+		 * @return returns the number of rows.
+		 */
+		public int getRowCount() {
+			//return data.length;
+			int size;
+			if (myList == null) {
+				size = 0;
+			}
+			else {
+				size = myList.size();
+			}
+			return size;
+		}
+
+		/**
+		 * Purpose: Gets the name of the column.
+		 * @return returns the name of the column.
+		 */
+		public String getColumnName(int col) {
+			return header[col];
+		}
+
+		/**
+		 * Purpose: Gets the value of the specific location of the table
+		 * @return returns the value.
+		 */
+		public Object getValueAt(int row, int col) {
+			Object temp = null;
+			if (col == 0) {
+				temp = myList.get(row).getType();
+			}
+			else if (col == 1) {
+				temp = myList.get(row).getName();
+			}
+			else if (col == 2) {
+				temp = myList.get(row).getStatus();
+			}
+			else if (col == 3) {
+				temp = myList.get(row).getTypeA();
+			}  
+			else if (col == 4) {
+				temp = myList.get(row).getTypeB();
+			}  
+			else if (col == 5) {
+				temp = myList.get(row).getMailAddress();
+			}
+			else if (col == 6) {
+				temp = myList.get(row).getAddressCity();
+			}
+			else if (col == 7) {
+				temp = myList.get(row).getAddressZipcode();
+			}
+			return temp;
+		}
+
+		/**
+		 * Purpose: Gets the class of the column
+		 * @return returns class as a string. 
+		 */
+		public Class getColumnClass(int col) {
+			if (col == 2) {
+				return String.class;
+			}
+			else {
+				return String.class;
+			}
+		}
+
+	}//end TableModel inner class
+
+	/**
+	 * Purpose: Registers the controller as the listener
+	 * @param the DaycareController as the controller
+	 */
+	public void registerListener(DaycareController listener) 
+	{
+		filterText.getDocument().addDocumentListener(listener);
+
+		nameButton.addActionListener(listener);
+		cityButton.addActionListener(listener);
+		zipCodeButton.addActionListener(listener);
+		statusButton.addActionListener(listener);
+
+		//sets up the switch conditions
+		cityButton.setActionCommand("2");
+		zipCodeButton.setActionCommand("3");
+		statusButton.setActionCommand("4");  
+	}
+
+	/**
+	 * Purpose: Builds up the filter for the JTable
+	 * @param
+	 */
+	public void newFilter() {
+		RowFilter<TableModel, Object> rf = null;
+		try 
+		{
+			//filter by column and make case insensitive with (?i)
+			if(nameButton.isSelected() == true)
+				rf = RowFilter.regexFilter("(?i)" + filterText.getText(), 1);
+			else if(cityButton.isSelected() == true)
+				rf = RowFilter.regexFilter("(?i)" + filterText.getText(), 6); 
+			else if(zipCodeButton.isSelected() == true)
+				rf = RowFilter.regexFilter("(?i)" + filterText.getText(), 7);
+			else if (statusButton.isSelected() == true)
+				rf = RowFilter.regexFilter("(?i)" + filterText.getText(), 2);
+			else
+				rf = RowFilter.regexFilter("(?i)" + filterText.getText(), 1);
+		} 
+		catch (java.util.regex.PatternSyntaxException e) 
+		{
+			return;
+		}
+		sorter.setRowFilter(rf);
+
+
+	}
+
+	/**
+	 * Purpose: updates the actions of the GUI components
+	 * @param returns string value
+	 */
+	public void update(String value) 
+	{
+
+	}
+
+}
+
